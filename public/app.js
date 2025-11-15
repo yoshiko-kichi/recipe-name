@@ -33,12 +33,7 @@ const generateBtn = document.getElementById('generateBtn');
 const previewContainer = document.getElementById('previewContainer');
 const imagePreview = document.getElementById('imagePreview');
 
-// Click to upload
-uploadLabel.addEventListener('click', () => {
-    fileInput.click();
-});
-
-// File selection
+// File selection - label's 'for' attribute handles the click automatically
 fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
