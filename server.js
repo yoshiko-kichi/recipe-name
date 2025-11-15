@@ -2,9 +2,15 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const OpenAI = require('openai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+});
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -145,8 +151,107 @@ const nameTemplates = {
     ]
 };
 
-// Generate random dish names
-async function generateDishNames() {
+// Analyze dish image using OpenAI Vision
+async function analyzeDishImage(imagePath) {
+    try {
+        // Read the image and convert to base64
+        const imageBuffer = await fs.readFile(imagePath);
+        const base64Image = imageBuffer.toString('base64');
+        const mimeType = imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        {
+                            type: "text",
+                            text: "Describe this dish in detail. Focus on: main ingredients, cooking method, colors, texture, cuisine type, and overall appearance. Be concise but descriptive."
+                        },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:${mimeType};base64,${base64Image}`
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens: 300
+        });
+
+        return response.choices[0].message.content;
+    } catch (error) {
+        console.error('Error analyzing image:', error);
+        throw error;
+    }
+}
+
+// Generate dish names using AI based on image analysis
+async function generateDishNames(imagePath) {
+    const preferences = await loadPreferences();
+
+    // Check if we have learned preferences
+    const hasPreferences = preferences.selectedNames.length > 0;
+    let preferenceContext = '';
+
+    if (hasPreferences) {
+        // Get top favorite keywords
+        const favoriteKeywords = Object.entries(preferences.keywords)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([word]) => word);
+
+        const recentNames = preferences.selectedNames.slice(-5);
+
+        preferenceContext = `\n\nUser's naming preferences (incorporate these styles if appropriate):
+- Frequently used words: ${favoriteKeywords.join(', ')}
+- Recent selected names: ${recentNames.join(', ')}`;
+    }
+
+    try {
+        // Analyze the dish image
+        const dishDescription = await analyzeDishImage(imagePath);
+
+        // Generate creative names based on the description
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a creative dish naming expert. Generate exactly 3 unique, creative, and appealing dish names. Names should be concise (2-5 words), evocative, and match the dish's characteristics. Use varied styles: one elegant/poetic, one playful/fun, and one descriptive/straightforward."
+                },
+                {
+                    role: "user",
+                    content: `Based on this dish description, generate 3 creative dish names:\n\n${dishDescription}${preferenceContext}\n\nProvide ONLY the 3 names, one per line, without numbering or explanation.`
+                }
+            ],
+            max_tokens: 150,
+            temperature: 0.9
+        });
+
+        const namesText = response.choices[0].message.content.trim();
+        const names = namesText.split('\n')
+            .map(name => name.trim())
+            .filter(name => name.length > 0)
+            .slice(0, 3);
+
+        // Ensure we have exactly 3 names
+        if (names.length < 3) {
+            throw new Error('Failed to generate 3 names');
+        }
+
+        return names;
+    } catch (error) {
+        console.error('Error generating names with AI:', error);
+        // Fallback to random generation if API fails
+        return generateRandomDishNames();
+    }
+}
+
+// Fallback: Generate random dish names (used if AI fails)
+async function generateRandomDishNames() {
     const preferences = await loadPreferences();
     const names = [];
 
@@ -238,15 +343,16 @@ app.use((err, req, res, next) => {
 
 // Generate names endpoint
 app.post('/api/generate-names', upload.single('image'), async (req, res) => {
+    let imagePath = null;
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, error: 'No valid image file uploaded. Please upload a JPEG, PNG, GIF, or WebP image.' });
         }
 
-        const imagePath = req.file.path;
+        imagePath = req.file.path;
 
-        // Generate names (no longer needs image path)
-        const names = await generateDishNames();
+        // Generate names using AI vision
+        const names = await generateDishNames(imagePath);
 
         // Delete the uploaded file (privacy requirement)
         await fs.unlink(imagePath);
@@ -254,6 +360,16 @@ app.post('/api/generate-names', upload.single('image'), async (req, res) => {
         res.json({ success: true, names });
     } catch (error) {
         console.error('Error in generate-names:', error);
+
+        // Clean up uploaded file if it exists
+        if (imagePath) {
+            try {
+                await fs.unlink(imagePath);
+            } catch (unlinkError) {
+                console.error('Error deleting file:', unlinkError);
+            }
+        }
+
         res.status(500).json({ success: false, error: error.message });
     }
 });
