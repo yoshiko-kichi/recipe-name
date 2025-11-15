@@ -1,0 +1,124 @@
+## **1. Overview**
+
+### **Purpose**
+
+To build a simple web app that suggests creative names for dishes based on photos uploaded by the user (you and your husband). The app helps make the weekend cooking experience more fun by naming each dish and learning your naming preferences over time.
+
+### **Goal**
+
+Create a minimal, text-based web app that:
+
+* Displays three name suggestions for each uploaded dish photo.
+* Learns your preferred style of names through repeated selections.
+* Offers a simple and joyful interaction for two users.
+
+---
+
+## **2. Target Users**
+
+* **Primary User:** You (dish name curator).
+* **Secondary User:** Your husband (dish creator).
+
+Both users share access to the same account and preference history.
+
+---
+
+## **3. Problem Statement**
+
+Your husband cooks a variety of dishes every weekend, and you’d like a fun, personalized way to name them. Existing tools don’t combine photo-based AI naming with personalized learning. You want a lightweight, aesthetic-free (text-only) experience that focuses purely on the naming interaction.
+
+---
+
+## **4. Product Objectives**
+
+* Suggest 3 dish names for every photo upload.
+* Record which name was selected.
+* Learn over time to offer better, more personalized name suggestions.
+* Keep UI extremely minimal and accessible (text-only interface).
+
+---
+
+## **5. Key Features**
+
+### **5.1. Core Flow**
+
+1. **Upload Step:**
+
+   * User uploads a photo of a dish.
+   * App processes the image (AI model or API call).
+2. **Suggestion Step:**
+
+   * Three text-based dish name suggestions are displayed.
+   * User selects one.
+3. **Feedback Step:**
+
+   * Selection is logged to improve future naming suggestions.
+   * Optional “Regenerate” option for 3 new suggestions.
+4. **History View (optional):**
+
+   * See past dishes with chosen names.
+
+---
+
+### **5.2. Learning Component**
+
+* Each user’s choice contributes to a simple preference model:
+
+  * Records language tone (funny, elegant, descriptive, etc.).
+  * Tracks recurring keywords in selected names.
+  * Adjusts future name generation prompts to better match the style.
+* Basic version: store and analyze selection data locally (no cloud learning needed).
+
+---
+
+### **5.3. Interface**
+
+* **Style:** minimalist, text-only.
+* **Layout:**
+
+  * Photo upload box.
+  * Three vertically stacked name options (buttons or clickable text).
+  * “See history” and “Regenerate suggestions” links below.
+* **No animations, colors, or fancy fonts.**
+
+---
+
+## **6. Technical Requirements**
+
+### **Front-End**
+
+* HTML/CSS/JavaScript (or React if preferred).
+* Responsive layout for desktop and mobile.
+* File upload and result display components.
+
+### **Back-End**
+
+* API endpoint for:
+
+  * Image upload & temporary storage.
+  * Generating 3 names using an AI model (e.g., GPT-4/5 vision).
+  * Storing user selections for learning.
+* Simple database or local JSON store for history and preferences.
+
+### **AI/ML Logic**
+
+* Image → Text feature extraction (describe dish visually).
+* Use description + preference profile → generate 3 names.
+* Lightweight learning logic (reinforcement via user choices).
+
+---
+
+## **7. Data & Privacy**
+
+* Photos are stored temporarily (deleted after processing).
+* Preferences saved locally or in lightweight cloud DB (optional).
+* No personal data collection.
+
+---
+
+## **8. Success Metrics**
+
+* **Engagement:** number of dishes named per week.
+* **Accuracy:** % of sessions where a name is chosen without regenerating.
+* **Learning:** improved satisfaction measured by fewer regenerations over time.
+

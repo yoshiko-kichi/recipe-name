@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dish Name Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dish Name Generator</h1>
+        </header>
+
+        <main id="uploadPage" class="page active">
+            <div class="upload-section">
+                <label for="fileInput" class="upload-label">
+                    [ Upload a Photo of Your Dish ]
+                    <br>(Click to upload or drag & drop)
+                </label>
+                <input type="file" id="fileInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+
+                <div id="previewContainer" style="display: none;">
+                    <img id="imagePreview" alt="Dish preview">
+                </div>
+            </div>
+
+            <button id="generateBtn" class="primary-btn" disabled>[ Generate Dish Names ]</button>
+        </main>
+
+        <main id="suggestionPage" class="page">
+            <div id="dishThumbnail" class="thumbnail-container"></div>
+
+            <div class="suggestions-section">
+                <p class="section-title">Suggested Names:</p>
+
+                <div id="nameOptions" class="name-options">
+                    <!-- Name options will be inserted here -->
+                </div>
+
+                <button id="regenerateBtn" class="secondary-btn">[ Regenerate Suggestions ]</button>
+            </div>
+
+            <div id="confirmationMessage" class="confirmation" style="display: none;"></div>
+        </main>
+
+        <main id="historyPage" class="page">
+            <h2>Dish Name Generator - History</h2>
+
+            <div id="historyList" class="history-list">
+                <!-- History items will be inserted here -->
+            </div>
+
+            <button id="backToUploadFromHistory" class="secondary-btn">[ Back to Upload ]</button>
+        </main>
+
+        <footer>
+            <span>© 2025 Dish Name Generator</span>
+            <a href="#" id="historyLink">History</a>
+            <a href="#" id="backToUpload">Back</a>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
